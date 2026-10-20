@@ -1,0 +1,234 @@
+import numpy as np
+
+
+# Linear polyene function
+def Linear(n, a, b):
+    L = np.zeros((n, n))
+
+    for i in range(n):
+        L[i, i] = a
+
+    for i in range(n - 1):
+        L[i, i + 1] = b
+        L[i + 1, i] = b
+
+    return L
+
+
+# Cyclic polyene function
+def Cyclic(n, a, b):
+    Cy = np.zeros((n, n))
+
+    for i in range(n):
+        Cy[i, i] = a
+
+    for i in range(n - 1):
+        Cy[i, i + 1] = b
+        Cy[i + 1, i] = b
+
+    Cy[0, n - 1] = b
+    Cy[n - 1, 0] = b
+
+    return Cy
+
+
+# Tetrahedron function
+def Tetrahedron(a, b):
+    T = np.full((4, 4), b)
+    np.fill_diagonal(T, a)
+    return T
+
+
+# Cube function
+def Cube(a, b):
+    C = np.zeros((8, 8))
+
+    bonds = [
+        (0, 1), (0, 2), (0, 4),
+        (2, 5), (2, 3),
+        (1, 3), (1, 6),
+        (5, 7), (7, 6), (3, 7),
+        (5, 4), (6, 4)
+    ]
+
+    np.fill_diagonal(C, a)
+
+    for i, j in bonds:
+        C[i, j] = b
+        C[j, i] = b
+
+    return C
+
+
+# Dodecahedron function
+def Dodecahedron(a, b):
+    D = np.zeros((20, 20))
+    np.fill_diagonal(D, a)
+
+    bonds = [
+        (0, 1), (0, 2), (0, 3),
+        (1, 4), (1, 5),
+        (2, 6), (2, 7),
+        (3, 8), (3, 9),
+        (4, 6), (4, 10),
+        (5, 8), (5, 11),
+        (6, 12),
+        (7, 9), (7, 13),
+        (8, 14), (9, 15),
+        (11, 10), (10, 16), (11, 17),
+        (12, 13), (12, 16), (13, 18),
+        (14, 17), (14, 15), (15, 18),
+        (16, 19), (17, 19), (18, 19)
+    ]
+
+    for i, j in bonds:
+        D[i, j] = b
+        D[j, i] = b
+
+    return D
+
+
+# Linear acenes function
+def Acenes(N, a, b):
+    A = np.zeros((N, N))
+
+    for i in range(N):
+        A[i, i] = a
+
+    for i in range(N - 2):
+        A[i, i + 2] = b
+        A[i + 2, i] = b
+
+    for i in range(0, N - 1, 4):
+        A[i, i + 1] = b
+        A[i + 1, i] = b
+
+    return A
+
+
+# Counting degeneracy function
+def degen(eigen):
+    energy, counts = np.unique(np.round(eigen, 6), return_counts=True)
+
+    e = list(energy)
+    c = list(counts)
+
+    for i in list(range(len(e))):
+        print(f"Eigenvalue: {e[i]:.7f}  Degeneracy: {c[i]}")
+
+
+
+# Main program
+print("Welcome to the Huckel Matrix Calculator by Perth!")
+
+while True:
+    print("\nPlease choose a type of molecule:")
+    print("1. Linear polyene 2. Cyclic polyene 3. Platonic solid 4. Linear acene")
+
+    choice = input("Enter your choice (1-4): ")
+
+    A = None
+
+    if choice not in ["1", "2", "3", "4"]:
+        print("Wrong number. Please try again.")
+        continue
+
+    while True:
+        try:
+            a = float(input("Enter a (Coulomb integral): "))
+            b = float(input("Enter b (Resonance integral): "))
+
+        except ValueError:
+            print("Please enter valid numbers.")
+            continue
+
+        if a > 0 and b > 0:
+            print("Warning: The results may be invalid as a and b should be negative.")
+
+        break
+
+    # Linear polyene
+    if choice == "1":
+        while True:
+            try:
+                n = int(input("Enter number of carbons, n (2 or greater): "))
+            except ValueError:
+                print("Please enter an integer.")
+                continue
+
+            if n < 2:
+                print("The results may be invalid as n should be 2 or greater.")
+
+            break
+
+
+        A = Linear(n, a, b)
+
+    # Cyclic polyene
+    elif choice == "2":
+        while True:
+            try:
+                n = int(input("Enter number of carbons, n (3 or greater): "))
+            except ValueError:
+                print("Please enter an integer.")
+                continue
+
+            if n < 3:
+                print("The results may be invalid as n should be 3 or greater.")
+
+            break
+
+        A = Cyclic(n, a, b)
+
+    # Platonic solids
+    elif choice == "3":
+        while True:
+            print("\nChoose a solid:")
+            print("1. Tetrahedron")
+            print("2. Cube")
+            print("3. Dodecahedron")
+
+            subchoice = input("Enter your choice (1-3): ").strip()
+
+            if subchoice == "1":
+                A = Tetrahedron(a, b)
+                break
+            elif subchoice == "2":
+                A = Cube(a, b)
+                break
+            elif subchoice == "3":
+                A = Dodecahedron(a, b)
+                break
+            else:
+                print("Invalid. Please try again.")
+
+    # Linear acenes
+    elif choice == "4":
+        while True:
+            try:
+                n = int(input("Enter number of carbons, n (1 or greater): "))
+            except ValueError:
+                print("Please enter an integer.")
+                continue
+
+            if n < 1:
+                print("The results may be invalid as n should be 1 or greater.")
+
+            break
+
+        N = 4 * n + 2
+        A = Acenes(N, a, b)
+
+    # Calculate eigenvalues and degeneracies
+    if A is not None:
+        eigen = np.linalg.eigvalsh(A)
+
+        print("\nDegeneracies:")
+        degen(eigen)
+
+    # Repeat program
+    again = input("\nWould you like to try again? (y/n): ").strip().lower()
+
+    if again not in ("y"):
+        print("Thank you for using the Huckel Matrix Calculator!")
+        break
